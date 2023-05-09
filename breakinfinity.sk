@@ -1,0 +1,122 @@
+# !! DON'T CHANGE ANYTHING 
+#
+#
+options:
+  zeros: 45 # Amount of zeros for the program to use scientfic notation (limited at 183)
+
+
+on load:
+  set {z} to {@zeros}
+  if {z} > 183:
+    set {z} to 183
+function gte(n: string, n2: string) :: boolean:
+  set {_n::*} to {_n} split at "e"
+  set {_n2::*} to {_n2} split at "e"
+  return true if {_n2::2} parsed as number < {_n::2} parsed as number
+  return false if {_n2::2} parsed as number > {_n::2} parsed as number
+  return true if {_n2::1} parsed as number <= {_n::1} parsed as number
+  return false
+function tobignumber(n: number) :: string:
+  return "%10^(log({_n})-floor(log({_n})))%e%floor(log({_n}))%"
+function privatetobignumberfromlog(n: number) :: string:
+  return "%10^({_n}-floor({_n}))%e%floor({_n})%"
+function privateadd(n: string) :: string:
+  set {_n::*} to split {_n} at "e"
+  if {_n::2} parsed as number > 18:
+    return "%{_n::1}%e%{_n::2}%"
+  if {_n::2} parsed as number < -18:
+    set {_n::1} to 1
+    set {_n::2} to 0
+    return "%{_n::1}%e%{_n::2}%"
+  set {_n::1} to {_n::1} parsed as number+1/10^{_n::2} parsed as number
+  if {_n::1} >= 10:
+    set {_n::1} to {_n::1}/10
+    set {_n::2} to {_n::2} parsed as number+1
+  return "%{_n::1}%e%{_n::2}%"
+function biglog(n: string, b: number = 10) :: number:
+  set {_n::*} to {_n} split at "e"
+  return {_n::2} parsed as number*log(10, {_b})+log({_n::1} parsed as number, {_b})
+function biglog2(n: string) :: number:
+  return biglog({_n}, 2)
+function biglog3(n: string) :: number:
+  return biglog({_n}, 3)
+function biglog5(n: string) :: number:
+  return biglog({_n}, 5)
+function bigdiv(n: string, n2: string) :: string:
+  set {_n::*} to {_n} split at "e"
+  return "0e0" if {_n::1} parsed as number = 0
+  return privatetobignumberfromlog(biglog({_n})-biglog({_n2}))
+function bigmultiply(n: string, n2: string) :: string:
+  set {_n2::*} to {_n2} split at "e"
+  return "0e0" if {_n2::1} parsed as number = 0
+  set {_n::*} to {_n} split at "e"
+  return "0e0" if {_n::1} parsed as number = 0
+  return privatetobignumberfromlog(biglog({_n})+biglog({_n2}))
+function privatebignumformat(n: number) :: text:
+  set {_data} to "NQQGNT,180|OQQGNT,177|SPGNT,174|SXQGNT,171|QNQGNT,168|QDQGNT,165|QGNT,162|DQGNT,159|UQGNT,156|QQGNT,153|NQDDR,150|OQDDR,147|SPQDR,144|SXQDR,141|QNQDR,138|QDQDR,135|TQDR,132|DQDR,129|UQDR,126|QDDR,123|NOTG,120|OCTG,117|SPTG,114|SSTG,111|QNTG,108|QTTG,105|TSTG,102|DTG,99|UTG,96|TGN,93|NVG,90|OVG,87|SPG,84|SEV,81|QNV,78|QTV,75|TVG,72|DVG,69|UVGN,66|VGN,63|NVD,60|OCD,57|SPD,54|SXD,51|QND,48|QAD,45|TD,42|DD,39|UD,36|DE,33|N,30|O,27|SP,24|SX,21|QI,18|QA,15|T,12|B,9|M,6|K,3"
+  loop split {_data} at "|":
+    set {_s::*} to split loop-value at ","
+    {_s::2} parsed as number < {z}
+    {_n} >= 10 ^ {_s::2} parsed as number
+    return "%(rounded down {_n} / 10 ^ {_s::2} parsed as number*100)/100%%{_s::1}%"
+  return "%(rounded down {_n}*100)/100%"
+function bigformat(n: string) :: text:
+  set {_n::*} to {_n} split at "e"
+  if {_n::2} parsed as number <= {z}:
+    return privatebignumformat({_n::1} parsed as number*10^{_n::2} parsed as number)
+  else:
+    return {_n}
+function bigadd(n: string, n2: string) :: string:
+  set {_n::*} to {_n} split at "e"
+  set {_n2::*} to {_n2} split at "e"
+  return {_n} if {_n::2} parsed as number-{_n2::2} parsed as number >= 18
+  return {_n2} if {_n::2} parsed as number-{_n2::2} parsed as number <= -18
+  set {_n::1} to {_n::1} parsed as number+{_n2::1} parsed as number/10^({_n::2} parsed as number-{_n2::2} parsed as number)
+  if {_n::1} >= 10:
+    set {_n::1} to {_n::1}/10
+    set {_n::2} to {_n::2} parsed as number+1
+  if {_n::1} < 1:
+    set {_n::1} to {_n::1} *10
+    set {_n::2} to {_n::2} parsed as number - 1
+  return "%{_n::1}%e%{_n::2}%"
+function bigremove(n: string, n2: string) :: string:
+  set {_n::*} to {_n} split at "e"
+  set {_n2::*} to {_n2} split at "e"
+  return {_n} if {_n::2} parsed as number-{_n2::2} parsed as number >= 18
+  return "0e0" if {_n::1} parsed as number-{_n2::1} parsed as number/10^({_n::2} parsed as number-{_n2::2} parsed as number) < 0
+  set {_n::1} to {_n::1} parsed as number-{_n2::1} parsed as number/10^({_n::2} parsed as number-{_n2::2} parsed as number)
+  if {_n::1} < 1:
+    set {_n::1} to {_n::1} *10
+    set {_n::2} to {_n::2} parsed as number - 1
+  if {_n::1} >= 10:
+    set {_n::1} to {_n::1}/10
+    set {_n::2} to {_n::2} parsed as number+1
+  return "%{_n::1}%e%{_n::2}%"
+function tonumber(n: string) :: number:
+  return {_n} if {_n} = {_n} parsed as number
+  set {_n::*} to split {_n} at "e"
+  return {_n::1} parsed as number*10^{_n::2} parsed as number
+function bigpow(n: string, n2: number) :: string:
+  return privatetobignumberfromlog({_n2}*biglog({_n}))
+  
+# function list:
+#
+# gte({_n}, {_n2}), returns true if {_n} >= {_n2}, returns false if {_n} < {_n2}
+#
+# tobignumber(%number%), returns %number% in bignumber format
+#
+# biglog({_n}, %number%), returns log%number%({_n}) in number format
+#
+# bigdiv({_n}, {_n2}), returns {_n}/{_n2} in bignumber format
+#
+# bigmultiply({_n}, {_n2}), returns {_n}*{_n2} in bignumber format
+#
+# bigformat({_n}), returns a formatted version of {_n} using regular format up to zeros (configurable in options) zeros
+#
+# bigadd({_n}, {_n2}), returns {_n}+{_n2} in bignumber format
+#
+# bigremove({_n}, {_n2}), returns {_n}-{_n2} in bignumber format
+#
+# bigpow({_n}, %number%), returns {_n}^%regular number% in bignumber format
+#
+
