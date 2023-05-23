@@ -7,3 +7,4 @@ and contains commands that return their value using the functions from breakinfi
 
 An example game will be added soon
 
+!! I'm rewriting the entire system because skript doesn't allow accurate numbers due to it being in a string and accuracy being equal to skript accuract (default: 2)
